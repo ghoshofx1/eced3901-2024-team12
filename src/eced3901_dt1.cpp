@@ -38,8 +38,6 @@ class SquareRoutine : public rclcpp::Node
 	// Constructor creates a node named Square_Routine. 
 	SquareRoutine() : Node("Square_Routine")
 	{
-		straight_ = true;
-		turn_ = false;
 		// Create the subscription
 		// The callback function executes whenever data is published to the 'topic' topic.
 		subscription_ = this->create_subscription<nav_msgs::msg::Odometry>("odom", 10, std::bind(&SquareRoutine::topic_callback, this, _1));
@@ -57,75 +55,35 @@ class SquareRoutine : public rclcpp::Node
 	{
 		x_now = msg->pose.pose.position.x;
 		y_now = msg->pose.pose.position.y;
-		double qx = msg->pose.pose.orientation.x;
-		double qy = msg->pose.pose.orientation.y;
-		double qw = msg->pose.pose.orientation.w;
-		double qz = msg->pose.pose.orientation.z;
-		tf2::Quaternion q(qx, qy, qz, qw);
-		tf2::Matrix3x3 m(q);
-		double roll, pitch, yaw;
-		m.getRPY(roll, pitch, yaw);
-		theta_now = yaw;
-		RCLCPP_INFO(this->get_logger(), "Current Yaw : %lf", yaw);
-		//RCLCPP_INFO(this->get_logger(), "Odom Acquired.")<;
+		
+		//RCLCPP_INFO(this->get_logger(), "Odom Acquired.");
 	}
 	
 	void timer_callback()
 	{
-		
-		
 		geometry_msgs::msg::Twist msg;
-		
-		if(straight_)
-		{
         	
-			// Calculate distance travelled from initial
-			d_now =	pow( pow(x_now - x_init, 2) + pow(y_now - y_init, 2), 0.5 );
+		// Calculate distance travelled from initial
+		d_now =	pow( pow(x_now - x_init, 2) + pow(y_now - y_init, 2), 0.5 );
 		
-			// Keep moving if not reached last distance target
-			if (d_now < d_aim)
-			{
-				msg.linear.x = x_vel; 
-				msg.angular.z = 0;
-				publisher_->publish(msg);		
-			}
-			else
-			{
-				msg.linear.x = 0;
-				msg.linear.z = 0;
-				publisher_->publish(msg);
-				straight_ = false;
-				turn_ = false;
-				theta_init = theta_now;
-			}
+		// Keep moving if not reached last distance target
+		if (d_now < d_aim)
+		{
+			msg.linear.x = x_vel; 
+			msg.angular.z = 0;
+			publisher_->publish(msg);		
 		}
 		// If done step, stop
 		else
 		{
-			
-			double angle_ = std::abs(theta_now-theta_init);
-			if (angle_ < M_PI/2)
-			{
-				msg.linear.x = 0; //double(rand())/double(RAND_MAX); //fun
-				msg.angular.z = 0.2; //2*double(rand())/double(RAND_MAX) - 1; //fun
-				publisher_->publish(msg);
-			}
-			else
-			{
-				msg.linear.x = 0; 
-				msg.angular.z = 0;
-				publisher_-> publish(msg);
-				straight_ = true;
-				turn_ = true;	
-			}
+			msg.linear.x = 0; //double(rand())/double(RAND_MAX); //fun
+			msg.angular.z = 0; //2*double(rand())/double(RAND_MAX) - 1; //fun
+			publisher_->publish(msg);
+			last_state_complete = 1;
 		}
-		if (turn_)
-		{
-			sequence_statemachine();
-		}
-			
 
-				
+
+		sequence_statemachine();		
 		
 
 		//RCLCPP_INFO(this->get_logger(), "Published cmd_vel.");
@@ -133,28 +91,26 @@ class SquareRoutine : public rclcpp::Node
 	
 	void sequence_statemachine()
 	{
-		if(turn_)
+		if (last_state_complete == 1)
 		{
 			switch(count_) 
 			{
-			 case 0:
-			   move_distance(1.0);
-			   break;
-			 case 1:
-			   move_distance(1.0);
-			   break;
-			 case 2:
-			   move_distance(1.0);
-			   break;
-			 case 3:
-			   move_distance(1.0);
-			   break;
-			 default:
-			   RCLCPP_INFO(this->get_logger(), "square completed"); 
-			   rclcpp::shutdown();
-			   break;
+			  case 0:
+			    move_distance(1.0);
+			    break;
+			  case 1:
+			    move_distance(1.0);
+			    break;
+			  case 2:
+			    move_distance(1.0);
+			    break;
+			  case 3:
+			    move_distance(1.0);
+			    break; 
+			  default:
+			    break;
 			}
-		}				
+		}			
 	}
 	
 	// Set the initial position as where robot is now and put new d_aim in place	
@@ -164,9 +120,8 @@ class SquareRoutine : public rclcpp::Node
 		x_init = x_now;
 		y_init = y_now;		
 		count_++;		// advance state counter
-		turn_ = 0;	
+		last_state_complete = 0;	
 	}
-	
 	
 
 	// Declaration of subscription_ attribute
@@ -182,11 +137,8 @@ class SquareRoutine : public rclcpp::Node
 	double x_vel = 0.2;
 	double x_now = 0, x_init = 0, y_now = 0, y_init = 0;
 	double d_now = 0, d_aim = 0;
-	double theta_now = 0, theta_init = 0;
 	size_t count_ = 0;
-	bool straight_;
-	bool turn_;
-	
+	int last_state_complete = 1;
 };
     	
 
