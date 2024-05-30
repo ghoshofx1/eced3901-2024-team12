@@ -108,7 +108,7 @@ private:
 			double angle_ = std::abs(theta_now - theta_init);
 			RCLCPP_INFO(this->get_logger(), "angle used for robot calculations: %lf\n", angle_);
 			
-			if (angle_ < M_PI / 2)  
+			if (angle_ < M_PI / 2.04)  
 			{
 				msg.linear.x = 0; //double(rand())/double(RAND_MAX); //fun
 				msg.angular.z = 0.2; //2*double(rand())/double(RAND_MAX) - 1; //fun
@@ -116,6 +116,7 @@ private:
 			}
 			else
 			{
+				//stop again
 				msg.linear.x = 0;
 				msg.angular.z = 0;
 				publisher_->publish(msg);
