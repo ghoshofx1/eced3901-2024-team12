@@ -1,174 +1,213 @@
-/*
-Code for DT1
-V. Sieben
-Version 1.0
-Date: Feb 4, 2023
-License: GNU GPLv3
-*/
-
-// Include important C++ header files that provide class
-// templates for useful operations.
-#include <chrono>		// Timer functions
-#include <functional>		// Arithmetic, comparisons, and logical operations
-#include <memory>		// Dynamic memory management
-#include <string>		// String functions
+#include <chrono>
+#include <functional>
+#include <memory>
+#include <string>
 #include <cmath>
-
-// ROS Client Library for C++
 #include "rclcpp/rclcpp.hpp"
-
-// Message types
 #include "std_msgs/msg/string.hpp"
 #include "geometry_msgs/msg/pose.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 #include "nav_msgs/msg/odometry.hpp"
-
 #include <tf2/LinearMath/Quaternion.h>
 #include <tf2/LinearMath/Matrix3x3.h>
 
 using namespace std::chrono_literals;
 using std::placeholders::_1;
 
+typedef enum direction_state
+{
+	Stop_State = 0,
+	Move_Forward = 1,
+	Move_Backward = 2,
+	Rotate_Clockwise = 3,
+	Rotate_CounterClockwise = 4
 
-// Create the node class named SquareRoutine
-// It inherits rclcpp::Node class attributes and functions
+
+
+} direction_state;
+
+typedef struct velocity
+{
+	double linear_velocity;
+	double angular_velocity;
+} velocity;
+
 class SquareRoutine : public rclcpp::Node
 {
-public:
-	// Constructor creates a node named Square_Routine. 
-	SquareRoutine() : Node("Square_Routine")
-	{
-
-		// Create the subscription
-		// The callback function executes whenever data is published to the 'topic' topic.
-		subscription_ = this->create_subscription<nav_msgs::msg::Odometry>("odom", 10, std::bind(&SquareRoutine::topic_callback, this, _1));
-
-		// Create the publisher
-		// Publisher to a topic named "topic". The size of the queue is 10 messages.
-		publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
-
-		// Create the timer
-		timer_ = this->create_wall_timer(25ms, std::bind(&SquareRoutine::timer_callback, this));
-	}
-
-private:
-	//update current position and orientation based on odometry data
-	void topic_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
-	{
-		x_now = msg->pose.pose.position.x;
-		y_now = msg->pose.pose.position.y;
-		double qx = msg->pose.pose.orientation.x;
-		double qy = msg->pose.pose.orientation.y;
-		double qw = msg->pose.pose.orientation.w;
-		double qz = msg->pose.pose.orientation.z;
-		tf2::Quaternion q(qx, qy, qz, qw);
-		tf2::Matrix3x3 m(q);
-		double roll, pitch, yaw;
-		m.getRPY(roll, pitch, yaw);
-		theta_now = yaw;
-		RCLCPP_INFO(this->get_logger(), "Current Yaw : %lf\n", yaw);
-		//RCLCPP_INFO(this->get_logger(), "Odom Acquired.")<;
-	}
-
-	void timer_callback()
-	{
-
-
-		geometry_msgs::msg::Twist msg;
-
-		if (straight_)
+	public:
+		SquareRoutine() : Node("Square_Routine")
 		{
-
-			// Calculate distance travelled from initial
-			d_now = pow(pow(x_now - x_init, 2) + pow(y_now - y_init, 2), 0.5);
-
-			// Keep moving if not reached last distance target
-			if (d_now < d_aim)
-			{
-				msg.linear.x = x_vel; //Set linear velocity
-				msg.angular.z = 0; //No angular velocity
-				publisher_->publish(msg); //Publish the velocity command
-			}
-			else
-			{
-				//Stop and prepare to turn
-				msg.linear.x = 0;
-				msg.linear.z = 0;
-				publisher_->publish(msg);
-				straight_ = false;
-				turn_ = false;
-				theta_init = theta_now;
-			}
+			subscription_ = this->create_subscription<nav_msgs::msg::Odometry>(
+			"odom", 10, std::bind(&SquareRoutine::odom_callback, this, _1));
+			publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
+			timer_ = this->create_wall_timer(100ms, std::bind(&SquareRoutine::timer_callback, this));
 		}
-		// If done step, stop
-		else
+
+	private:
+		double calculate_yaw(double w, double x, double y, double z)
 		{
+			double siny_cosp = 2 * (w * z + x * y);
+			double cosy_sinp = 1 - 2 * (y * y + z * z);
+			return atan2(siny_cosp, cosy_sinp);
+		}
+
+		double rad_to_deg(double rad)
+		{	
+			return rad = (180 / M_PI);
+		}
+
+		double normalize_angle(double angle)
+		{
+			angle = fmod(angle + 180, 360);
+			if (angle < 0)
+			{
+				angle += 360;
+			}
+
+			return angle - 180;
+		}
+
+		double add_angles(double angle_1, double angle_2)
+		{
+			return normalize_angle(angle_1 + angle_2);
+
+		}
+
+		double calculate_distance(double x_1, double x_2, double y_1, double y_2)
+		{
+			return pow(pow(x_2 - x_1, 2) + pow(y_2 - y_1, 2), 0.5);
+		}
+		void odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
+		{
+			x_now = msg->pose.pose.position.x;
+			y_now = msg->pose.pose.position.y;
+			double qx = msg->pose.pose.orientation.x;
+			double qy = msg->pose.pose.orientation.y;
+			double qz = msg->pose.pose.orientation.z;
+			double qw = msg->pose.pose.orientation.w;
+			current_angle = rad_to_deg(calculate_yaw(qw, qx, qy, qz));
+		}
+		void timer_callback()
+		{
+
 		
-			//turn 90 degrees
-			double angle_ = std::abs(theta_now - theta_init);
-			RCLCPP_INFO(this->get_logger(), "angle used for robot calculations: %lf\n", angle_);
-			
-			if (angle_ < M_PI / 2.04)  
+			geometry_msgs::msg::Twist msg;
+			velocity velocity;
+			d_position = calculate_distance(x_now, x_init, y_now, y_init);
+
+			d_angle = add_angles(angle_aim, -current_angle);
+
+			if (d_position > d_position_aim)
 			{
-				msg.linear.x = 0; //double(rand())/double(RAND_MAX); //fun
-				msg.angular.z = 0.2; //2*double(rand())/double(RAND_MAX) - 1; //fun
-				publisher_->publish(msg);
+				last_state_complete = 1;
+				d_position_aim = 100;
 			}
-			else
+			if (abs(d_angle) < angle_tolerance)
 			{
-				//stop again
-				msg.linear.x = 0;
-				msg.angular.z = 0;
-				publisher_->publish(msg);
-				straight_ = true; //Prepare to turn straight again
-				turn_ = true; //Set flag to turn completion
+				angle_tolerance = -1;
+				last_state_complete = 1;
 			}
-		}
-		if (turn_)
-		{
+
 			sequence_statemachine();
+			velocity = direction_state_machine();
+	
+			msg.linear.x = velocity.linear_velocity;
+			msg.angular.z = velocity.angular_velocity;
+			publisher_->publish(msg);
+
+
+		//RCLCPP_INFO(this->get_logger(), "Published cmd_vel.");
 		}
-			
-	}
-	
-	
-	// Manage states to create sequence of movements for square path
-	void sequence_statemachine()
-	{
-		if (turn_)
+
+		velocity direction_state_machine()
 		{
-			switch (count_)
+			velocity velocity = { 0, 0 };
+			switch(direction)
 			{
-			case 0:
-				move_distance(1);
+			case Move_Forward:
+				velocity.linear_velocity = linear_speed;
 				break;
-			case 1:
-				move_distance(1);
+	
+			case Move_Backward:
+				velocity.linear_velocity = -linear_speed;
 				break;
-			case 2:
-				move_distance(1);
+	
+			case Rotate_Clockwise:
+				velocity.angular_velocity = -angular_speed;
 				break;
-			case 3:
-				move_distance(1);
+
+			case Rotate_CounterClockwise:
+				velocity.angular_velocity = angular_speed;
 				break;
-			default:
-				RCLCPP_INFO(this->get_logger(), "square completed");
-				rclcpp::shutdown();
+
+			case Stop_State:
 				break;
 			}
 		}
-	}
+
+		void sequence_statemachine()
+		{
+			if (last_state_complete == 1)
+			{
+				switch (count_)
+				{
+				case 0:
+					direction = Move_Forward;
+					move_distance(1.0);
+					break;
+				case 1:
+					direction = Rotate_Clockwise;
+					rotate_angle(-90);
+					break;
+				case 2:
+					direction = Move_Forward;
+					move_distance(1.0);
+					break;
+				case 3:
+					direction = Rotate_Clockwise;
+					rotate_angle(-90);
+					break;
+				case 4:
+					direction = Move_Forward;
+					move_distance(1.0);
+					break;
+				case 5:
+					direction = Rotate_Clockwise;
+					rotate_angle(-90);
+					break;
+				case 6:
+					direction = Move_Forward;
+					move_distance(1.0);
+					break;
+				case 7:
+					direction = Rotate_Clockwise;
+					rotate_angle(-90);
+					break;
+				default:
+					RCLCPP_INFO(this->get_logger(), "square completed");
+					direction = Stop_State;
+					break;
+				}
+			}
+		}	
 
 	// Set the initial position as where robot is now and put new d_aim in place	
 	void move_distance(double distance)
 	{
-		d_aim = distance;
+		d_position_aim = distance;
 		x_init = x_now;
 		y_init = y_now;
 		count_++;		// advance state counter
-		turn_ = 0;
+		last_state_complete = 0;
 	}
 
+	void rotate_angle(double angle)
+	{
+		angle_tolerance = 2;
+		angle_aim = add_angles(current_angle, angle);
+		count_++;
+		last_state_complete = 0;
+	}
 
 
 	// Declaration of subscription_ attribute
@@ -181,13 +220,19 @@ private:
 	rclcpp::TimerBase::SharedPtr timer_;
 
 	// Declaration of Class Variables
-	double x_vel = 0.2;
+	double linear_speed = 0.1;
 	double x_now = 0, x_init = 0, y_now = 0, y_init = 0;
-	double d_now = 0, d_aim = 0;
-	double theta_now = 0, theta_init = 0;
+	double qx = 0, qy = 0, qz = 0, qw = 0;
+	double d_position = 0, d_position_aim = 0;
+	double current_angle = 0;
+	double d_angle = 0, angle_aim = 0;
+	double angular_speed = 0.1, angle tolerance = 2;
+
+	direction_state direction = Stop_State;
+
 	size_t count_ = 0;
-	bool straight_;
-	bool turn_;
+	int last_state_complete = 1;
+
 
 };
 
