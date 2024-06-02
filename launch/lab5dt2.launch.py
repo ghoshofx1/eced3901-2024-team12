@@ -118,6 +118,7 @@ def generate_launch_description():
     name='rviz2',
     output='screen',
     arguments=['-d', rviz_config_file])    
+  
 
   # Launch the ROS 2 Navigation Stack
   start_ros2_navigation_cmd = IncludeLaunchDescription(

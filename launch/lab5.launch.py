@@ -96,6 +96,9 @@ def generate_launch_description():
     'robot_description': Command(['xacro ', model])}],
     arguments=[default_model_path])
 
+
+  
+
   
   # Create the launch description and populate
   ld = LaunchDescription()
