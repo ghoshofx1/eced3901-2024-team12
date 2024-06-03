@@ -22,8 +22,6 @@ typedef enum direction_state
 	Rotate_Clockwise = 3,
 	Rotate_CounterClockwise = 4
 
-
-
 } direction_state;
 
 typedef struct velocity
@@ -38,7 +36,7 @@ class SquareRoutine : public rclcpp::Node
 		SquareRoutine() : Node("Square_Routine")
 		{
 			subscription_ = this->create_subscription<nav_msgs::msg::Odometry>(
-			"odom", 10, std::bind(&SquareRoutine::odom_callback, this, _1));
+			"odom", 10, std::bind(&SquareRoutine::topic_callback, this, _1));
 			publisher_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
 			timer_ = this->create_wall_timer(100ms, std::bind(&SquareRoutine::timer_callback, this));
 		}
@@ -53,7 +51,7 @@ class SquareRoutine : public rclcpp::Node
 
 		double rad_to_deg(double rad)
 		{	
-			return rad = (180 / M_PI);
+			return rad * (180 / M_PI);
 		}
 
 		double normalize_angle(double angle)
@@ -77,7 +75,7 @@ class SquareRoutine : public rclcpp::Node
 		{
 			return pow(pow(x_2 - x_1, 2) + pow(y_2 - y_1, 2), 0.5);
 		}
-		void odom_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
+		void topic_callback(const nav_msgs::msg::Odometry::SharedPtr msg)
 		{
 			x_now = msg->pose.pose.position.x;
 			y_now = msg->pose.pose.position.y;
@@ -143,6 +141,7 @@ class SquareRoutine : public rclcpp::Node
 			case Stop_State:
 				break;
 			}
+			return velocity;
 		}
 
 		void sequence_statemachine()
@@ -226,7 +225,7 @@ class SquareRoutine : public rclcpp::Node
 	double d_position = 0, d_position_aim = 0;
 	double current_angle = 0;
 	double d_angle = 0, angle_aim = 0;
-	double angular_speed = 0.1, angle tolerance = 2;
+	double angular_speed = 0.1, angle_tolerance = 2;
 
 	direction_state direction = Stop_State;
 
