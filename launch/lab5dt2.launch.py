@@ -134,6 +134,11 @@ def generate_launch_description():
     period=30.0,
     actions=[save_map_cmd]
   )
+
+  hard_coded_delay = TimerAction(
+    period=30.0,
+    actions=[start_DT1_cmd, delayed_save_map_cmd]
+  )
     
 
   # Launch the ROS 2 Navigation Stack
@@ -168,8 +173,11 @@ def generate_launch_description():
   # Add any actions
   ld.add_action(start_rviz_cmd)
   ld.add_action(start_ros2_navigation_cmd)
-  ld.add_action(start_DT1_cmd)
+
+  ld.add_action(hard_coded_delay)
+
+  #ld.add_action(start_DT1_cmd)
   #ld.add_action(save_map_cmd)
-  ld.add_action(delayed_save_map_cmd)
+  #ld.add_action(delayed_save_map_cmd)
 
   return ld
