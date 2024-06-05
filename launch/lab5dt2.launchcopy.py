@@ -46,7 +46,7 @@ def generate_launch_description():
   # In case of the transforms (tf), currently, there doesn't seem to be a better alternative
   # https://github.com/ros/geometry2/issues/32
   # https://github.com/ros/robot_state_publisher/pull/30
-  # TODO(orduno) Substitute with PushNodeRemapping
+  # TODO(orduno) Substitute with `PushNodeRemapping`
   #              https://github.com/ros2/launch_ros/issues/56
   remappings = [('/tf', 'tf'),
                 ('/tf_static', 'tf_static')]
@@ -117,24 +117,32 @@ def generate_launch_description():
     executable='rviz2',
     name='rviz2',
     output='screen',
-    arguments=['-d', rviz_config_file])  
+    arguments=['-d', rviz_config_file])    
 
-  start_DT1_cmd = Node(
+  # start_DT1_cmd = Node(
+  #   package='eced3901',
+  #   executable='dt1',
+  #   name= 'dt1'
+  # )
+
+
+  start_DT1_cmd = NOde(
     package='eced3901',
     executable='dt1'
   )
 
+  
   save_map_cmd = Node (
     package='nav2_map_server',
     executable='map_saver_cli',
-    arguments=['-f', '/home/student/ros2_ws/src/eced3901/maps/lab5_maps']
+    arguments=['-f', 'src/eced3901/maps/lab5_maps']
   )
-
+  
   delayed_save_map_cmd = TimerAction(
     period=30.0,
     actions=[save_map_cmd]
   )
-    
+  
 
   # Launch the ROS 2 Navigation Stack
   start_ros2_navigation_cmd = IncludeLaunchDescription(
@@ -169,7 +177,10 @@ def generate_launch_description():
   ld.add_action(start_rviz_cmd)
   ld.add_action(start_ros2_navigation_cmd)
   ld.add_action(start_DT1_cmd)
-  #ld.add_action(save_map_cmd)
-  ld.add_action(delayed_save_map_cmd)
+  ld.add_action(save_map_cmd)
+
+
 
   return ld
+
+

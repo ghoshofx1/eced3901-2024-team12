@@ -152,27 +152,27 @@ class SquareRoutine : public rclcpp::Node
 				{
 				case 0:
 					direction = Move_Forward;
-					move_distance(1.0);
+					move_distance(1);
 					break;
 				case 1:
 					direction = Rotate_Clockwise;
-					rotate_angle(-90);
+					rotate_angle(90);
 					break;
 				case 2:
 					direction = Move_Forward;
-					move_distance(1.0);
+					move_distance(1);
 					break;
 				case 3:
 					direction = Rotate_Clockwise;
-					rotate_angle(-90);
+					rotate_angle(90);
 					break;
 				case 4:
 					direction = Move_Forward;
-					move_distance(1.0);
+					move_distance(1);
 					break;
 				case 5:
 					direction = Rotate_Clockwise;
-					rotate_angle(-90);
+					rotate_angle(90);
 					break;
 				case 6:
 					direction = Move_Forward;
@@ -180,7 +180,7 @@ class SquareRoutine : public rclcpp::Node
 					break;
 				case 7:
 					direction = Rotate_Clockwise;
-					rotate_angle(-90);
+					rotate_angle(90);
 					break;
 				default:
 					RCLCPP_INFO(this->get_logger(), "square completed");
@@ -225,7 +225,7 @@ class SquareRoutine : public rclcpp::Node
 	double d_position = 0, d_position_aim = 0;
 	double current_angle = 0;
 	double d_angle = 0, angle_aim = 0;
-	double angular_speed = 0.1, angle_tolerance = 2;
+	double angular_speed = -0.1, angle_tolerance = 2;
 
 	direction_state direction = Stop_State;
 
@@ -251,4 +251,3 @@ int main(int argc, char* argv[])
 	rclcpp::shutdown();
 	return 0;
 }
-
