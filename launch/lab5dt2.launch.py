@@ -119,26 +119,29 @@ def generate_launch_description():
     output='screen',
     arguments=['-d', rviz_config_file])  
 
+
+  # start node for DT1
   start_DT1_cmd = Node(
     package='eced3901',
     executable='dt1'
   )
 
+  #save to maps folder
   save_map_cmd = Node (
     package='nav2_map_server',
     executable='map_saver_cli',
     arguments=['-f', '/home/student/ros2_ws/src/eced3901/maps/lab5_maps']
   )
-
+  #timer action save maps for 90 seconds. 
   delayed_save_map_cmd = TimerAction(
-    period=30.0,
+    period=90.0,
     actions=[save_map_cmd]
   )
 
-  hard_coded_delay = TimerAction(
-    period=30.0,
-    actions=[start_DT1_cmd, delayed_save_map_cmd]
-  )
+  # hard_coded_delay = TimerAction(
+  #   period=30.0,
+  #   actions=[start_DT1_cmd, delayed_save_map_cmd]
+  # )
     
 
   # Launch the ROS 2 Navigation Stack
@@ -174,10 +177,10 @@ def generate_launch_description():
   ld.add_action(start_rviz_cmd)
   ld.add_action(start_ros2_navigation_cmd)
 
-  ld.add_action(hard_coded_delay)
+  #ld.add_action(hard_coded_delay)
 
-  #ld.add_action(start_DT1_cmd)
+  ld.add_action(start_DT1_cmd)
   #ld.add_action(save_map_cmd)
-  #ld.add_action(delayed_save_map_cmd)
+  ld.add_action(delayed_save_map_cmd)
 
   return ld

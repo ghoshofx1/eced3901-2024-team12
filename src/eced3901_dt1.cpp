@@ -42,18 +42,19 @@ class SquareRoutine : public rclcpp::Node
 		}
 
 	private:
+		//Calculate yaw
 		double calculate_yaw(double w, double x, double y, double z)
 		{
 			double siny_cosp = 2 * (w * z + x * y);
 			double cosy_sinp = 1 - 2 * (y * y + z * z);
 			return atan2(siny_cosp, cosy_sinp);
 		}
-
+		//change radians to degrees
 		double rad_to_deg(double rad)
 		{	
 			return rad * (180 / M_PI);
 		}
-
+		//Normalize angle to -180 to 180 degrees
 		double normalize_angle(double angle)
 		{
 			angle = fmod(angle + 180, 360);
@@ -70,7 +71,8 @@ class SquareRoutine : public rclcpp::Node
 			return normalize_angle(angle_1 + angle_2);
 
 		}
-
+		
+		//Calculate the distance based on X & Y
 		double calculate_distance(double x_1, double x_2, double y_1, double y_2)
 		{
 			return pow(pow(x_2 - x_1, 2) + pow(y_2 - y_1, 2), 0.5);
@@ -91,10 +93,11 @@ class SquareRoutine : public rclcpp::Node
 		
 			geometry_msgs::msg::Twist msg;
 			velocity velocity;
+			//calculate the distance from initial
 			d_position = calculate_distance(x_now, x_init, y_now, y_init);
-
+			//Find the difference of angles
 			d_angle = add_angles(angle_aim, -current_angle);
-
+			//Check the conditions
 			if (d_position > d_position_aim)
 			{
 				last_state_complete = 1;
@@ -116,7 +119,7 @@ class SquareRoutine : public rclcpp::Node
 
 		//RCLCPP_INFO(this->get_logger(), "Published cmd_vel.");
 		}
-
+		// Commands for direction
 		velocity direction_state_machine()
 		{
 			velocity velocity = { 0, 0 };
@@ -143,7 +146,7 @@ class SquareRoutine : public rclcpp::Node
 			}
 			return velocity;
 		}
-
+		//Commands to move a square path 
 		void sequence_statemachine()
 		{
 			if (last_state_complete == 1)
@@ -199,12 +202,12 @@ class SquareRoutine : public rclcpp::Node
 		count_++;		// advance state counter
 		last_state_complete = 0;
 	}
-
+	//Set Angle Aim
 	void rotate_angle(double angle)
 	{
 		angle_tolerance = 2;
 		angle_aim = add_angles(current_angle, angle);
-		count_++;
+		count_++;  //advance state counter-
 		last_state_complete = 0;
 	}
 
