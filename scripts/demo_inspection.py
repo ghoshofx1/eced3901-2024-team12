@@ -18,12 +18,23 @@ from copy import deepcopy
 from geometry_msgs.msg import PoseStamped
 from nav2_simple_commander.robot_navigator import BasicNavigator, TaskResult
 import rclpy
+import math
 
 """
 Basic stock inspection demo. In this demonstration, the expectation
 is that there are cameras or RFID sensors mounted on the robots
 collecting information about stock quantity and location.
 """
+
+def calculate_yaw(x, y, z, w):
+    siny_cosp = 2 * (w * z + x * y)
+    cosy_cosp = 1 - 2 * (y * y + z * z)
+    return math.atan2(siny_cosp, cosy_cosp)
+
+def calculate_quaternion(yaw):
+    z = math.sin(yaw * 0.5)
+    w = math.cos(yaw * 0.5)
+    return (0.0, 0.0, z, w)
 
 
 def main():
@@ -34,22 +45,21 @@ def main():
     # Inspection route, probably read in from a file for a real application
     # from either a map or drive and repeat.
     inspection_route = [
-        [3.461, -0.450],
-        [5.531, -0.450],
-        [3.461, -2.200],
-        [5.531, -2.200],
-        [3.661, -4.121],
-        [5.431, -4.121],
-        [3.661, -5.850],
-        [5.431, -5.800]]
+        [1.1, 0.1, math.pi/2],
+        [1.1, 1.1, math.pi],
+        [0.1, 1.1, 3*math.pi/2],
+        [0.1, 0.1, 0.0]]
+        
 
     # Set our demo's initial pose
     initial_pose = PoseStamped()
     initial_pose.header.frame_id = 'map'
     initial_pose.header.stamp = navigator.get_clock().now().to_msg()
-    initial_pose.pose.position.x = 3.45
-    initial_pose.pose.position.y = 2.15
-    initial_pose.pose.orientation.z = 1.0
+    initial_pose.pose.position.x = 0.1
+    initial_pose.pose.position.y = 0.1
+    initial_pose.pose.orientation.x = 0.0
+    initial_pose.pose.orientation.y = 0.0
+    initial_pose.pose.orientation.z = 0.0
     initial_pose.pose.orientation.w = 0.0
     navigator.setInitialPose(initial_pose)
 
@@ -61,11 +71,15 @@ def main():
     inspection_pose = PoseStamped()
     inspection_pose.header.frame_id = 'map'
     inspection_pose.header.stamp = navigator.get_clock().now().to_msg()
-    inspection_pose.pose.orientation.z = 1.0
-    inspection_pose.pose.orientation.w = 0.0
+    
     for pt in inspection_route:
         inspection_pose.pose.position.x = pt[0]
         inspection_pose.pose.position.y = pt[1]
+        quaternion = calculate_quaternion(pt[2])
+        inspection_pose.pose.orientation.x = quaternion[0]
+        inspection_pose.pose.orientation.y = quaternion[1]
+        inspection_pose.pose.orientation.z = quaternion[2]
+        inspection_pose.pose.orientation.w = quaternion[3]
         inspection_points.append(deepcopy(inspection_pose))
     navigator.followWaypoints(inspection_points)
 
@@ -87,13 +101,10 @@ def main():
     elif result == TaskResult.FAILED:
         print('Inspection of shelving failed! Returning to start...')
 
-    # go back to start
-    initial_pose.header.stamp = navigator.get_clock().now().to_msg()
-    navigator.goToPose(initial_pose)
     while not navigator.isTaskComplete():
         pass
 
-    exit(0)
+    rclpy.shutdown
 
 
 if __name__ == '__main__':
