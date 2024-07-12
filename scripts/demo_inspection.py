@@ -19,6 +19,14 @@ from geometry_msgs.msg import PoseStamped
 from nav2_simple_commander.robot_navigator import BasicNavigator, TaskResult
 import rclpy
 import math
+import sys
+import serial
+from rclpy.node import Node
+from std_msgs.msg import Empty, Int32
+from geometry_msgs.msg import Pose, Twist
+
+example_group_number = 0
+
 
 
 """
@@ -37,6 +45,78 @@ def calculate_quaternion(yaw):
     w = math.cos(yaw * 0.5)
     return (0.0, 0.0, z, w)
 
+# class PosePublisher(Node):
+
+# 	# Constructor
+# 	def __init__(self):
+# 		super().__init__('competition_publisher')
+# 		self.publisher_ = self.create_publisher(Empty, 'CompetitionStart', 10)
+# 		# Set interval for publishing
+# 		timer_period = 0.5
+# 		self.timer = self.create_timer(timer_period, self.timer_callback)
+	
+# 	# Function called on every timer interval
+# 	def timer_callback(self):
+# 		# Publish empty msg
+# 		msg = Empty()
+# 		self.publisher_.publish(msg)
+
+
+# class TestStudent(Node):
+
+# 	# Constructor using number entered in console
+# 	def __init__(self, team_number):
+# 		super().__init__(f"test_student_{team_number}")
+# 		self.publisher_ = self.create_publisher(Pose, f"team_{team_number}_pose", 10) # fstring lets you format a string in its statement
+# 		self.other_publishers = self.create_publisher(Empty, "other_robot_stuff", 10)
+# 		self.ready_publisher = self.create_publisher(Int32, f"team_{team_number}_ready", 10)
+# 		self.vel_pub = self.create_publisher(Twist, "cmd_vel", 10)
+# 		timer_period = 0.5
+# 		self.timer = self.create_timer(timer_period, self.timer_callback)
+# 		self.competition_start_subscription = self.create_subscription(
+# 			Empty,
+# 			'CompetitionStart',
+# 			self.start_callback,
+# 			10
+# 		)
+# 		self.start = False
+	
+# 	# Publish pose (you can do this at any rate you want)
+# 	def timer_callback(self):
+	
+# 		ready_msg = Int32()
+# 		ready_msg.data = example_group_number
+# 		self.ready_publisher.publish(ready_msg)
+	
+# 		# If start has not been received
+# 		if  not self.start:
+# 			return
+	
+# 		# Create pose message
+# 		msg = Pose()
+		
+# 		# Populate with unique data
+# 		msg.position.x = 0.0
+# 		msg.position.x = 0.1
+# 		msg.position.x = 0.2
+		
+# 		msg.orientation.x = 0.3
+# 		msg.orientation.y = 0.4
+# 		msg.orientation.z = 0.5
+# 		msg.orientation.w = 0.6
+		
+# 		# Publish pose message
+# 		self.publisher_.publish(msg)
+		
+# 		vel_msg = Twist()
+# 		vel_msg.linear.x = 1.0
+# 		self.vel_pub.publish(vel_msg)
+		
+# 	# Receive empty start message and flip on switch
+# 	def start_callback(self, msg):
+# 		self.start = True
+		
+	 
 
 
 

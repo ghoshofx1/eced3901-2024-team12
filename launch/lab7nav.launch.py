@@ -130,8 +130,8 @@ def generate_launch_description():
                         'params_file': params_file,
                         'default_bt_xml_filename': default_bt_xml_filename,
                         'autostart': autostart}.items())
-
   
+
   # Launch WP follower
   start_wpfollow = Node(
     condition=IfCondition(use_rviz),
@@ -139,6 +139,36 @@ def generate_launch_description():
     executable='demo_inspection.py',
     name='wp_follower',
     output='screen') 
+  
+
+
+  
+  # namespace remapping node
+  start_namespace_remapper = Node(
+			package='eced3901_competition_2024',
+			namespace='team_12_jammy_whammy',
+			executable='test_student_with_switch',
+			name='team_12_jammy_whammy',
+			remappings=[
+				('/team_12_jammy_whammy/team_1_pose', '/team_1_pose'),
+				('/team_12_jammy_whammy/team_2_pose', '/team_2_pose'),
+				('/team_12_jammy_whammy/CompetitionStart', '/CompetitionStart'),
+				('/team_12_jammy_whammy/team_1_ready', '/team_1_ready'),
+				('/team_12_jammy_whammy/team_2_ready', '/team_2_ready')
+				
+			],
+			output='screen'
+		)
+  
+  #dalmotor node
+  start_dalmotor = Node(
+			package='dalmotor',
+			namespace='team_12_jammy_whammy',
+			executable='dalmotor',
+			name='team_12_motor',
+			output='screen'
+		)
+
   
   
   # Create the launch description and populate
@@ -158,10 +188,12 @@ def generate_launch_description():
   ld.add_action(declare_use_sim_time_cmd)
 
 
-  # Add any actions
+  # Add any actions - start up the nodes
   ld.add_action(start_rviz_cmd)
   ld.add_action(start_ros2_navigation_cmd)
   ld.add_action(start_wpfollow)
+  ld.add_action(start_namespace_remapper)
+  ld.add_action(start_dalmotor)
   
   return ld
 
