@@ -155,38 +155,59 @@ class SquareRoutine : public rclcpp::Node
 				{
 				case 0:
 					direction = Move_Forward;
-					move_distance(1);
+					move_distance(2.6);
 					break;
 				case 1:
-					direction = Rotate_Clockwise;
-					rotate_angle(90);
+					direction = Rotate_CounterClockwise;
+					rotate_angle(-88);
 					break;
 				case 2:
 					direction = Move_Forward;
-					move_distance(1);
+					move_distance(0.5);
 					break;
 				case 3:
-					direction = Rotate_Clockwise;
-					rotate_angle(90);
+					direction = Rotate_CounterClockwise;
+					rotate_angle(-90);
 					break;
 				case 4:
 					direction = Move_Forward;
-					move_distance(1);
+					move_distance(2.6);
 					break;
 				case 5:
 					direction = Rotate_Clockwise;
-					rotate_angle(90);
+					rotate_angle(88);
 					break;
 				case 6:
 					direction = Move_Forward;
-					move_distance(1.0);
+					move_distance(0.2);
 					break;
 				case 7:
 					direction = Rotate_Clockwise;
+					rotate_angle(88);
+					break;
+				case 8:
+					direction = Move_Forward;
+					move_distance(2.6);
+					break;
+				case 9:
+					direction = Rotate_Clockwise;
+					rotate_angle(88);
+					break;
+				case 10:
+					direction = Move_Forward;
+					move_distance(0.8);
+					break;
+				case 11:
+					direction = Rotate_Clockwise;
 					rotate_angle(90);
 					break;
+				case 12:
+					direction = Move_Forward;
+					move_distance(2.6);
+					break;
+
 				default:
-					RCLCPP_INFO(this->get_logger(), "square completed");
+					RCLCPP_INFO(this->get_logger(), "path completed");
 					direction = Stop_State;
 					break;
 				}
@@ -222,7 +243,7 @@ class SquareRoutine : public rclcpp::Node
 	rclcpp::TimerBase::SharedPtr timer_;
 
 	// Declaration of Class Variables
-	double linear_speed = 0.1;
+	double linear_speed = 0.2;
 	double x_now = 0, x_init = 0, y_now = 0, y_init = 0;
 	double qx = 0, qy = 0, qz = 0, qw = 0;
 	double d_position = 0, d_position_aim = 0;

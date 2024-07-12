@@ -20,6 +20,7 @@ from nav2_simple_commander.robot_navigator import BasicNavigator, TaskResult
 import rclpy
 import math
 
+
 """
 Basic stock inspection demo. In this demonstration, the expectation
 is that there are cameras or RFID sensors mounted on the robots
@@ -37,18 +38,25 @@ def calculate_quaternion(yaw):
     return (0.0, 0.0, z, w)
 
 
+
+
+
 def main():
     rclpy.init()
+    
 
     navigator = BasicNavigator()
 
     # Inspection route, probably read in from a file for a real application
     # from either a map or drive and repeat.
     inspection_route = [
-        [1.1, 0.1, math.pi/2],
-        [1.1, 1.1, math.pi],
-        [0.1, 1.1, 3*math.pi/2],
-        [0.1, 0.1, 0.0]]
+        [2.8, 0.1, -(math.pi/2)],
+        [2.8, -0.5, -(math.pi)],
+        [0.5, -0.5, -(math.pi/2)],
+        [0.5, -0.7, 0.0],
+        [2.8, -0.7, math.pi/2],
+        [2.8, 2.8, math.pi],
+        [-0.1, 0.1, math.pi]]
         
 
     # Set our demo's initial pose
@@ -72,6 +80,8 @@ def main():
     inspection_pose.header.frame_id = 'map'
     inspection_pose.header.stamp = navigator.get_clock().now().to_msg()
     
+    
+
     for pt in inspection_route:
         inspection_pose.pose.position.x = pt[0]
         inspection_pose.pose.position.y = pt[1]
