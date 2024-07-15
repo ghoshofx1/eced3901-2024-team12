@@ -7,13 +7,16 @@
 import sys
 
 import serial
+
 import rclpy
+
 from rclpy.node import Node
 
 from std_msgs.msg import Empty, Int32
 from geometry_msgs.msg import Pose, Twist
+from nav_msgs.msg import Odometry
 
-example_group_number = 0
+example_group_number = 12
 
 # Class to act as a team's robot
 class TestStudent(Node):
@@ -27,6 +30,7 @@ class TestStudent(Node):
 		self.vel_pub = self.create_publisher(Twist, "cmd_vel", 10)
 		timer_period = 0.5
 		self.timer = self.create_timer(timer_period, self.timer_callback)
+		self.odom_subscriber = self.create_subscription(Odometry,'odom', self.populate, 10)
 		self.competition_start_subscription = self.create_subscription(
 			Empty,
 			'CompetitionStart',
@@ -34,6 +38,7 @@ class TestStudent(Node):
 			10
 		)
 		self.start = False
+		self.position_info = Pose()
 	
 	# Publish pose (you can do this at any rate you want)
 	def timer_callback(self):
@@ -46,21 +51,24 @@ class TestStudent(Node):
 		if  not self.start:
 			return
 	
+	
 		# Create pose message
-		msg = Pose()
+		#msg = Pose()
 		
 		# Populate with unique data
-		msg.position.x = 0.0
-		msg.position.x = 0.1
-		msg.position.x = 0.2
-		
-		msg.orientation.x = 0.3
-		msg.orientation.y = 0.4
-		msg.orientation.z = 0.5
-		msg.orientation.w = 0.6
-		
+
+
+		#CHANGES TO BE MADE
+		# msg.position.x = self.position_info.pose.position.x
+		# msg.position.y = self.position_info.pose.position.y
+		# msg.position.x = self.position_info.pose.position.z
+		# msg.orientation.x = 0.3
+		# msg.orientation.y = 0.4
+		# msg.orientation.z = 0.5
+		# msg.orientation.w = 0.6
+
 		# Publish pose message
-		self.publisher_.publish(msg)
+		self.publisher_.publish(self.position_info)
 		
 		vel_msg = Twist()
 		vel_msg.linear.x = 1.0
@@ -69,9 +77,14 @@ class TestStudent(Node):
 	# Receive empty start message and flip on switch
 	def start_callback(self, msg):
 		self.start = True
+	
+
+	#callback to update our positionlby doing some math
+	def populate(self, msg):
+		self.position_info = msg.pose.pose
+
 		
-	 
-		
+
 def main():
 	# No arguments handled any more
 	
@@ -80,13 +93,12 @@ def main():
 			port='/dev/ttyUSB0', # USB number could change depending on what port the USB is plugged into. DOUBLE CHECK THIS
 			baudrate=9600)
 	
-    
 			
 	team_number = chr(ser.read()[-1])
 	
 	# Swap example group number with your group number (and remove the IF statement) when ready
-	global example_group_number
-	example_group_number = 11 if team_number == '1' else 15 
+	# global example_group_number
+	# example_group_number = 11 if team_number == '1' else 15 
 			
 	# Init ros2
 	rclpy.init()

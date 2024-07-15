@@ -41,7 +41,7 @@ def generate_launch_description():
   use_rviz = LaunchConfiguration('use_rviz')
   use_sim_time = LaunchConfiguration('use_sim_time')
 
-  
+
   # Map fully qualified names to relative ones so the node's namespace can be prepended.
   # In case of the transforms (tf), currently, there doesn't seem to be a better alternative
   # https://github.com/ros/geometry2/issues/32
@@ -117,13 +117,15 @@ def generate_launch_description():
     executable='rviz2',
     name='rviz2',
     output='screen',
-    arguments=['-d', rviz_config_file])    
+    arguments=['-d', rviz_config_file]
+    )
+    #namespace = 'team_12_jammy_whammy')    
 
   # Launch the ROS 2 Navigation Stack
   start_ros2_navigation_cmd = IncludeLaunchDescription(
     PythonLaunchDescriptionSource(os.path.join(nav2_launch_dir, 'bringup_launch.py')),
     launch_arguments = {'namespace': namespace,
-                        'use_namespace': use_namespace,
+                        'use_namespace': use_namespace, # WTF does this do?
                         'slam': slam,
                         'map': map_yaml_file,
                         'use_sim_time': use_sim_time,
@@ -138,33 +140,35 @@ def generate_launch_description():
     package='eced3901',
     executable='demo_inspection.py',
     name='wp_follower',
-    output='screen') 
+    output='screen',
+    #namespace='team_12_jammy_whammy'
+    ) 
   
 
 
   
   # namespace remapping node
   start_namespace_remapper = Node(
-			package='eced3901_competition_2024',
-			namespace='team_12_jammy_whammy',
+			package='eced3901',
+			#namespace='team_12_jammy_whammy',
 			executable='test_student_with_switch',
 			name='team_12_jammy_whammy',
-			remappings=[
-				('/team_12_jammy_whammy/team_1_pose', '/team_1_pose'),
-				('/team_12_jammy_whammy/team_2_pose', '/team_2_pose'),
-				('/team_12_jammy_whammy/CompetitionStart', '/CompetitionStart'),
-				('/team_12_jammy_whammy/team_1_ready', '/team_1_ready'),
-				('/team_12_jammy_whammy/team_2_ready', '/team_2_ready')
+			# remappings=[
+			# 	('/team_12_jammy_whammy/team_1_pose', '/team_1_pose'),
+			# 	('/team_12_jammy_whammy/team_2_pose', '/team_2_pose'),
+			# 	('/team_12_jammy_whammy/CompetitionStart', '/CompetitionStart'),
+			# 	('/team_12_jammy_whammy/team_1_ready', '/team_1_ready'),
+			# 	('/team_12_jammy_whammy/team_2_ready', '/team_2_ready')
 				
-			],
+			# ],
 			output='screen'
 		)
   
   #dalmotor node
   start_dalmotor = Node(
 			package='dalmotor',
-			namespace='team_12_jammy_whammy',
-			executable='dalmotor',
+			#namespace='team_12_jammy_whammy',
+			executable='robot.launch.py',
 			name='team_12_motor',
 			output='screen'
 		)
