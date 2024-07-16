@@ -39,7 +39,8 @@ class TestStudent(Node):
 		)
 		self.start = False
 		self.position_info = Pose()
-	
+
+
 	# Publish pose (you can do this at any rate you want)
 	def timer_callback(self):
 	
@@ -50,8 +51,7 @@ class TestStudent(Node):
 		# If start has not been received
 		if  not self.start:
 			return
-	
-	
+
 		# Create pose message
 		#msg = Pose()
 		

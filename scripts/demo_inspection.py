@@ -49,7 +49,7 @@ def calculate_quaternion(yaw):
 def main():
     rclpy.init()
     
-
+    
     navigator = BasicNavigator()
 
     # Inspection route, probably read in from a file for a real application

@@ -6,12 +6,13 @@
 
 import os
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, RegisterEventHandler
 from launch.conditions import IfCondition, UnlessCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import Command, LaunchConfiguration, PythonExpression
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
+from launch.event_handlers import OnExecutionComplete
 
 def generate_launch_description():
 
@@ -173,6 +174,22 @@ def generate_launch_description():
 			output='screen'
 		)
 
+
+  delay_motor = Node(
+      package='eced3901',
+      executable='delay_motor.py'
+  )
+  
+
+  start_nav2 = RegisterEventHandler(
+                event_handler=OnExecutionComplete(
+                target_action=delay_motor,
+                on_exit=[start_nav2],
+            )
+            )
+        
+  
+
   
   
   # Create the launch description and populate
@@ -192,12 +209,16 @@ def generate_launch_description():
   ld.add_action(declare_use_sim_time_cmd)
 
 
+
   # Add any actions - start up the nodes
   ld.add_action(start_rviz_cmd)
   ld.add_action(start_ros2_navigation_cmd)
   ld.add_action(start_wpfollow)
   ld.add_action(start_namespace_remapper)
   ld.add_action(start_dalmotor)
+
+
+
   
   return ld
 
