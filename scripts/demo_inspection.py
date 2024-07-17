@@ -20,7 +20,7 @@ from nav2_simple_commander.robot_navigator import BasicNavigator, TaskResult
 import rclpy
 import math
 import sys
-import serial
+# import serial
 from rclpy.node import Node
 from std_msgs.msg import Empty, Int32
 from geometry_msgs.msg import Pose, Twist
@@ -93,7 +93,7 @@ class TestStudent(Node):
           
         timer_period = 0.1  # seconds
         velocity = 0.5  # Speed in feet/second
-        distance = 10  # Distance in feet
+        distance = 9  # Distance in feet
         duration = distance / velocity  # Duration in seconds
         rate = 10  # Publishing rate in Hz
         iterations = int(duration * rate)
@@ -108,8 +108,24 @@ class TestStudent(Node):
         # Stop the robot
         msg.linear.x = 0.0
         self.vel_pub.publish(msg)
-        self.get_logger().info('Reached 10 feet, stopping.')
+        self.get_logger().info('Reached 9 feet, stopping.')
 
+        time.sleep(2)
+
+        msg.linear.x = -velocity
+
+        for i in range(iterations):
+            self.vel_pub.publish(msg)
+            time.sleep(1.0 / rate)
+        
+        # Stop the robot
+        msg.linear.x = 0.0
+        self.vel_pub.publish(msg)
+        self.get_logger().info('Traveled back 9 feet, stopping.')
+
+        
+
+        rclpy.shutdown()
 
     #callback to update our positionlby doing some math
     def populate(self, msg):
@@ -127,6 +143,7 @@ def main():
     # team_number = chr(ser.read()[-1])
 
     test_student = TestStudent(1)
+    print("printing for fun!")
 
     # navigator = BasicNavigator()
 
@@ -197,7 +214,7 @@ def main():
     # while not navigator.isTaskComplete():
     #     pass
 
-    while rclpy.ok() and not test_student.start:
+    while not test_student.start:
         
         rclpy.spin_once(test_student)
 
