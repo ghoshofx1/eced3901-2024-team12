@@ -135,7 +135,7 @@ def generate_launch_description():
                         'autostart': autostart}.items())
   
 
-  # Launch WP follower
+  # Launch WP follower + important 
   start_wpfollow = Node(
     condition=IfCondition(use_rviz),
     package='eced3901',
@@ -145,25 +145,22 @@ def generate_launch_description():
     #namespace='team_12_jammy_whammy'
     ) 
   
-
-
-  
   # namespace remapping node
-  start_namespace_remapper = Node(
-			package='eced3901',
-			#namespace='team_12_jammy_whammy',
-			executable='test_student_with_switch',
-			name='team_12_jammy_whammy',
-			# remappings=[
-			# 	('/team_12_jammy_whammy/team_1_pose', '/team_1_pose'),
-			# 	('/team_12_jammy_whammy/team_2_pose', '/team_2_pose'),
-			# 	('/team_12_jammy_whammy/CompetitionStart', '/CompetitionStart'),
-			# 	('/team_12_jammy_whammy/team_1_ready', '/team_1_ready'),
-			# 	('/team_12_jammy_whammy/team_2_ready', '/team_2_ready')
+  # start_namespace_remapper = Node(
+	# 		package='eced3901',
+	# 		#namespace='team_12_jammy_whammy',
+	# 		executable='test_student_with_switch',
+	# 		name='team_12_jammy_whammy',
+	# 		# remappings=[
+	# 		# 	('/team_12_jammy_whammy/team_1_pose', '/team_1_pose'),
+	# 		# 	('/team_12_jammy_whammy/team_2_pose', '/team_2_pose'),
+	# 		# 	('/team_12_jammy_whammy/CompetitionStart', '/CompetitionStart'),
+	# 		# 	('/team_12_jammy_whammy/team_1_ready', '/team_1_ready'),
+	# 		# 	('/team_12_jammy_whammy/team_2_ready', '/team_2_ready')
 				
-			# ],
-			output='screen'
-		)
+	# 		# ],
+	# 		output='screen'
+	# 	)
   
   #dalmotor node
   start_dalmotor = Node(
@@ -175,18 +172,18 @@ def generate_launch_description():
 		)
 
 
-  delay_motor = Node(
-      package='eced3901',
-      executable='delay_motor.py'
-  )
+  # delay_motor = Node(
+  #     package='eced3901',
+  #     executable='delay_motor.py'
+  # )
   
 
-  start_nav2 = RegisterEventHandler(
-                event_handler=OnExecutionComplete(
-                target_action=delay_motor,
-                on_exit=[start_nav2],
-            )
-            )
+  # start_nav2 = RegisterEventHandler(
+  #               event_handler=OnExecutionComplete(
+  #               target_action=delay_motor,
+  #               on_exit=[start_nav2],
+  #           )
+  #           )
         
   
 
@@ -214,7 +211,7 @@ def generate_launch_description():
   ld.add_action(start_rviz_cmd)
   ld.add_action(start_ros2_navigation_cmd)
   ld.add_action(start_wpfollow)
-  ld.add_action(start_namespace_remapper)
+  #ld.add_action(start_namespace_r  emapper)
   ld.add_action(start_dalmotor)
 
 
