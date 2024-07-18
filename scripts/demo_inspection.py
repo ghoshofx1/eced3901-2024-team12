@@ -20,7 +20,7 @@ from nav2_simple_commander.robot_navigator import BasicNavigator, TaskResult
 import rclpy
 import math
 import sys
-import serial
+#import serial
 from rclpy.node import Node
 from std_msgs.msg import Empty, Int32
 from geometry_msgs.msg import Pose, Twist
@@ -63,7 +63,9 @@ class TestStudent(Node):
             'CompetitionStart',
             self.start_callback,
             10
+        
         )
+        self.navigator = BasicNavigator()
         self.start = False
         self.position_info = Pose()
 
@@ -87,10 +89,10 @@ class TestStudent(Node):
         msg.position.y = self.position_info.position.y
         msg.position.z = self.position_info.position.z
 
-        msg.orientation.x = 0
-        msg.orientation.y = 0
-        msg.orientation.z = 0 # this needs some mathematics!! and needs to be in the competition pose convention!
-        msg.orientation.w = 0 #
+        msg.orientation.x = 0.0
+        msg.orientation.y = 0.0
+        msg.orientation.z = 0.0 # this needs some mathematics!! and needs to be in the competition pose convention!
+        msg.orientation.w = 0.0 #
 
 
         self.publisher_.publish(msg)
@@ -110,7 +112,7 @@ class TestStudent(Node):
 
 
         self.start = True
-        navigator = BasicNavigator()
+     #   navigator = BasicNavigator()
 
     # Inspection route, probably read in from a file for a real application
     # from either a map or drive and repeat.
@@ -127,23 +129,23 @@ class TestStudent(Node):
         # Set our demo's initial pose
         initial_pose = PoseStamped()
         initial_pose.header.frame_id = 'map'
-        initial_pose.header.stamp = navigator.get_clock().now().to_msg()
+        initial_pose.header.stamp = self.navigator.get_clock().now().to_msg()
         initial_pose.pose.position.x = 0.1
         initial_pose.pose.position.y = 0.1
         initial_pose.pose.orientation.x = 0.0
         initial_pose.pose.orientation.y = 0.0
         initial_pose.pose.orientation.z = 0.0
-        initial_pose.pose.orientation.w = 0.0
-        navigator.setInitialPose(initial_pose)
+        initial_pose.pose.orientation.w = 1.0
+        self.navigator.setInitialPose(initial_pose)
 
     # Wait for navigation to fully activate
-        navigator.waitUntilNav2Active()
+        self.navigator.waitUntilNav2Active()
 
         # Send our route
         inspection_points = []
         inspection_pose = PoseStamped()
         inspection_pose.header.frame_id = 'map'
-        inspection_pose.header.stamp = navigator.get_clock().now().to_msg()
+        inspection_pose.header.stamp = self.navigator.get_clock().now().to_msg()
         
         
 
@@ -157,7 +159,7 @@ class TestStudent(Node):
             inspection_pose.pose.orientation.w = quaternion[3]
             inspection_points.append(deepcopy(inspection_pose))
 
-        navigator.followWaypoints(inspection_points)
+        self.navigator.followWaypoints(inspection_points)
 
     # Do something during our route (e.x. AI to analyze stock information or upload to the cloud)
     # Simply the current waypoint ID for the demonstation
@@ -197,7 +199,7 @@ def main():
     
     team_number = chr(ser.read()[-1])
 
-    test_student = TestStudent(team_number)
+    test_student = TestStudent(2)
   
     rclpy.spin(test_student)
     

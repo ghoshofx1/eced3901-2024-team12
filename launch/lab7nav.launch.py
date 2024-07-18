@@ -122,7 +122,7 @@ def generate_launch_description():
     )
     #namespace = 'team_12_jammy_whammy')    
 
-  # Launch the ROS 2 Navigation Stack
+  #Launch the ROS 2 Navigation Stack
   start_ros2_navigation_cmd = IncludeLaunchDescription(
     PythonLaunchDescriptionSource(os.path.join(nav2_launch_dir, 'bringup_launch.py')),
     launch_arguments = {'namespace': namespace,
