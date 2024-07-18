@@ -20,7 +20,7 @@ from nav2_simple_commander.robot_navigator import BasicNavigator, TaskResult
 import rclpy
 import math
 import sys
-# import serial
+import serial
 from rclpy.node import Node
 from std_msgs.msg import Empty, Int32
 from geometry_msgs.msg import Pose, Twist
@@ -81,51 +81,106 @@ class TestStudent(Node):
             return
 
         # Publish pose message
-        self.publisher_.publish(self.position_info)
+        msg = Pose()
+
+        msg.position.x = self.position_info.position.x
+        msg.position.y = self.position_info.position.y
+        msg.position.z = self.position_info.position.z
+
+        msg.orientation.x = 0
+        msg.orientation.y = 0
+        msg.orientation.z = 0 # this needs some mathematics!! and needs to be in the competition pose convention!
+        msg.orientation.w = 0 #
+
+
+        self.publisher_.publish(msg)
         
-        vel_msg = Twist()
-        vel_msg.linear.x = 1.0
-        self.vel_pub.publish(vel_msg)
+        # vel_msg = Twist()
+        # vel_msg.linear.x = 1.0
+        # self.vel_pub.publish(vel_msg)
         
     # Receive empty start message and flip on switch
     def start_callback(self, msg):
+
+
+
+        if self.start == True:
+            return
+
+
+
         self.start = True
-          
-        timer_period = 0.1  # seconds
-        velocity = 0.5  # Speed in feet/second
-        distance = 9  # Distance in feet
-        duration = distance / velocity  # Duration in seconds
-        rate = 10  # Publishing rate in Hz
-        iterations = int(duration * rate)
-        msg = Twist()
-        msg.linear.x = velocity
-        msg.angular.z = 0.0
+        navigator = BasicNavigator()
 
-        for i in range(iterations):
-            self.vel_pub.publish(msg)
-            time.sleep(1.0 / rate)
-        
-        # Stop the robot
-        msg.linear.x = 0.0
-        self.vel_pub.publish(msg)
-        self.get_logger().info('Reached 9 feet, stopping.')
-
-        time.sleep(2)
-
-        msg.linear.x = -velocity
-
-        for i in range(iterations):
-            self.vel_pub.publish(msg)
-            time.sleep(1.0 / rate)
-        
-        # Stop the robot
-        msg.linear.x = 0.0
-        self.vel_pub.publish(msg)
-        self.get_logger().info('Traveled back 9 feet, stopping.')
-
+    # Inspection route, probably read in from a file for a real application
+    # from either a map or drive and repeat.
+        inspection_route = [
+        [2.8, 0.1, -(math.pi/2)],
+        [2.8, -0.5, -(math.pi)],
+        [0.5, -0.5, -(math.pi/2)],
+        [0.5, -0.7, 0.0],
+        [2.8, -0.7, math.pi/2],
+        [2.8, 2.8, math.pi],
+        [-0.1, 0.1, math.pi]]
         
 
-        rclpy.shutdown()
+        # Set our demo's initial pose
+        initial_pose = PoseStamped()
+        initial_pose.header.frame_id = 'map'
+        initial_pose.header.stamp = navigator.get_clock().now().to_msg()
+        initial_pose.pose.position.x = 0.1
+        initial_pose.pose.position.y = 0.1
+        initial_pose.pose.orientation.x = 0.0
+        initial_pose.pose.orientation.y = 0.0
+        initial_pose.pose.orientation.z = 0.0
+        initial_pose.pose.orientation.w = 0.0
+        navigator.setInitialPose(initial_pose)
+
+    # Wait for navigation to fully activate
+        navigator.waitUntilNav2Active()
+
+        # Send our route
+        inspection_points = []
+        inspection_pose = PoseStamped()
+        inspection_pose.header.frame_id = 'map'
+        inspection_pose.header.stamp = navigator.get_clock().now().to_msg()
+        
+        
+
+        for pt in inspection_route:
+            inspection_pose.pose.position.x = pt[0]
+            inspection_pose.pose.position.y = pt[1]
+            quaternion = calculate_quaternion(pt[2])
+            inspection_pose.pose.orientation.x = quaternion[0]
+            inspection_pose.pose.orientation.y = quaternion[1]
+            inspection_pose.pose.orientation.z = quaternion[2]
+            inspection_pose.pose.orientation.w = quaternion[3]
+            inspection_points.append(deepcopy(inspection_pose))
+
+        navigator.followWaypoints(inspection_points)
+
+    # Do something during our route (e.x. AI to analyze stock information or upload to the cloud)
+    # Simply the current waypoint ID for the demonstation
+        # i = 0
+        # while not navigator.isTaskComplete():
+        #     i += 1
+        #     feedback = navigator.getFeedback()
+        #     if feedback and i % 5 == 0:
+        #         print('Executing current waypoint: ' +
+        #             str(feedback.current_waypoint + 1) + '/' + str(len(inspection_points)))
+
+        # result = navigator.getResult()
+        # if result == TaskResult.SUCCEEDED:
+        #     print('Inspection of shelves complete! Returning to start...')
+        # elif result == TaskResult.CANCELED:
+        #     print('Inspection of shelving was canceled. Returning to start...')
+        # elif result == TaskResult.FAILED:
+        #     print('Inspection of shelving failed! Returning to start...')
+
+        # while not navigator.isTaskComplete():
+        #     pass
+
+        # rclpy.shutdown()
 
     #callback to update our positionlby doing some math
     def populate(self, msg):
@@ -136,99 +191,20 @@ def main():
     
     rclpy.init()
 
-    # ser = serial.Serial(
-    #         port='/dev/ttyUSB0', # USB number could change depending on what port the USB is plugged into. DOUBLE CHECK THIS
-    #         baudrate=9600)
+    ser = serial.Serial(
+            port='/dev/ttyUSB0', # USB number could change depending on what port the USB is plugged into. DOUBLE CHECK THIS
+            baudrate=9600)
     
-    # team_number = chr(ser.read()[-1])
+    team_number = chr(ser.read()[-1])
 
-    test_student = TestStudent(1)
-    print("printing for fun!")
-
-    # navigator = BasicNavigator()
-
-    # # Inspection route, probably read in from a file for a real application
-    # # from either a map or drive and repeat.
-    # inspection_route = [
-    #     [2.8, 0.1, -(math.pi/2)],
-    #     [2.8, -0.5, -(math.pi)],
-    #     [0.5, -0.5, -(math.pi/2)],
-    #     [0.5, -0.7, 0.0],
-    #     [2.8, -0.7, math.pi/2],
-    #     [2.8, 2.8, math.pi],
-    #     [-0.1, 0.1, math.pi]]
-        
-
-    # # Set our demo's initial pose
-    # initial_pose = PoseStamped()
-    # initial_pose.header.frame_id = 'map'
-    # initial_pose.header.stamp = navigator.get_clock().now().to_msg()
-    # initial_pose.pose.position.x = 0.1
-    # initial_pose.pose.position.y = 0.1
-    # initial_pose.pose.orientation.x = 0.0
-    # initial_pose.pose.orientation.y = 0.0
-    # initial_pose.pose.orientation.z = 0.0
-    # initial_pose.pose.orientation.w = 0.0
-    # navigator.setInitialPose(initial_pose)
-
-    # # Wait for navigation to fully activate
-    # navigator.waitUntilNav2Active()
-
-    # # Send our route
-    # inspection_points = []
-    # inspection_pose = PoseStamped()
-    # inspection_pose.header.frame_id = 'map'
-    # inspection_pose.header.stamp = navigator.get_clock().now().to_msg()
-    
-    
-
-    # for pt in inspection_route:
-    #     inspection_pose.pose.position.x = pt[0]
-    #     inspection_pose.pose.position.y = pt[1]
-    #     quaternion = calculate_quaternion(pt[2])
-    #     inspection_pose.pose.orientation.x = quaternion[0]
-    #     inspection_pose.pose.orientation.y = quaternion[1]
-    #     inspection_pose.pose.orientation.z = quaternion[2]
-    #     inspection_pose.pose.orientation.w = quaternion[3]
-    #     inspection_points.append(deepcopy(inspection_pose))
-    # navigator.followWaypoints(inspection_points)
-
-    # # Do something during our route (e.x. AI to analyze stock information or upload to the cloud)
-    # # Simply the current waypoint ID for the demonstation
-    # i = 0
-    # while not navigator.isTaskComplete():
-    #     i += 1
-    #     feedback = navigator.getFeedback()
-    #     if feedback and i % 5 == 0:
-    #         print('Executing current waypoint: ' +
-    #               str(feedback.current_waypoint + 1) + '/' + str(len(inspection_points)))
-
-    # result = navigator.getResult()
-    # if result == TaskResult.SUCCEEDED:
-    #     print('Inspection of shelves complete! Returning to start...')
-    # elif result == TaskResult.CANCELED:
-    #     print('Inspection of shelving was canceled. Returning to start...')
-    # elif result == TaskResult.FAILED:
-    #     print('Inspection of shelving failed! Returning to start...')
-
-    # while not navigator.isTaskComplete():
-    #     pass
-
-    while not test_student.start:
-        
-        rclpy.spin_once(test_student)
-
-
+    test_student = TestStudent(team_number)
+  
     rclpy.spin(test_student)
     
     # Gracefully kill
     test_student.destroy_node()
-
     rclpy.shutdown()
 
 
 if __name__ == '__main__':
     main()
-
-
-

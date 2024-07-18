@@ -135,7 +135,7 @@ def generate_launch_description():
                         'autostart': autostart}.items())
   
 
-  # Launch WP follower + important 
+  #Launch WP follower + important 
   start_wpfollow = Node(
     condition=IfCondition(use_rviz),
     package='eced3901',
@@ -163,13 +163,12 @@ def generate_launch_description():
 	# 	)
   
   #dalmotor node
-  start_dalmotor = Node(
-			package='dalmotor',
-			#namespace='team_12_jammy_whammy',
-			executable='robot.launch.py',
-			name='team_12_motor',
-			output='screen'
-		)
+  # start_dalmotor = Node(
+	# 		package='dalmotor',
+	# 		executable='robot.launch.py',
+	# 		name='team_12_motor',
+	# 		output='screen'
+	# 	)
 
 
   # delay_motor = Node(
@@ -186,7 +185,6 @@ def generate_launch_description():
   #           )
         
   
-
   
   
   # Create the launch description and populate
@@ -212,7 +210,7 @@ def generate_launch_description():
   ld.add_action(start_ros2_navigation_cmd)
   ld.add_action(start_wpfollow)
   #ld.add_action(start_namespace_r  emapper)
-  ld.add_action(start_dalmotor)
+  #ld.add_action(start_dalmotor)
 
 
 
